@@ -8,7 +8,7 @@ Compile and run on system with .net. v2 installed. To compile run
     
     C:\Windows\Microsoft.NET\Framework\v2.0.50727\vbc.exe flowerfield.vb
     
-It generates .exe file to run.
+It generates flowerfield.exe file to run.
 
 ===========
     
