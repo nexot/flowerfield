@@ -13,7 +13,7 @@ Public Class Test
     
     'Dim MyControlArray as ButtonArray
     
-    dim mybuttarray(Xsize,Ysize) as button
+    public mybuttarray(Xsize,Ysize) as button
     
     Public Sub action()
         'MsgBox("Hello, World!")
@@ -53,19 +53,37 @@ Public Class Test
     for i = 0 to Xsize
     
         for j = 0 to Ysize
-        
-            console.write ("i=" & CStr(i) & ";j=" & CStr(j))
-            mybuttarray(i,j) = new button()
-            mybuttarray(i,j).location = new System.Drawing.Point(20 + i*16, 70 + j*16)
-            mybuttarray(i,j).Name = ""
-            mybuttarray(i,j).Tag = i*(Ysize+1)+j
-            mybuttarray(i,j).Size = new System.Drawing.Size(16,16)
-            MyBase.Controls.Add(mybuttarray(i,j))
-            if (i-10)*(i-10)+(j-10)*(j-10)<57 then 
-               mybuttarray(i,j).Image = system.drawing.image.fromfile("smilebutt.png")
+            
+            'mybuttarray(i,j) = Nothing
+            
+            if mybuttarray(i,j) is Nothing then 
+                console.write (". Nothing, i=" & CStr(i) & ";j=" & CStr(j))
+                mybuttarray(i,j) = new button()
+                mybuttarray(i,j).location = new System.Drawing.Point(20 + i*16, 70 + j*16)
+                mybuttarray(i,j).Name = ""
+                mybuttarray(i,j).Tag = i*(Ysize+1)+j
+                mybuttarray(i,j).Size = new System.Drawing.Size(16,16)
+                
+                MyBase.Controls.Add(mybuttarray(i,j))
+                addhandler mybuttarray(i,j).MouseDown, addressof butt_clicker 
+            else
+                console.write (". i=" & CStr(i) & ";j=" & CStr(j))
             end if
             
-            addhandler mybuttarray(i,j).MouseDown, addressof butt_clicker 
+            
+            mybuttarray(i,j).FlatStyle = FlatStyle.Standard
+            
+            if (i-10)*(i-10)+(j-10)*(j-10)<57 then 
+               if (i-10)*(i-10)+(j-10)*(j-10)>23 then 
+                    mybuttarray(i,j).Image = system.drawing.image.fromfile("smile.png")
+               else
+                    mybuttarray(i,j).Image = system.drawing.image.fromfile("flower.png")
+               end if
+            else
+                    mybuttarray(i,j).Image = system.drawing.image.fromfile("dot.png")            
+            end if
+            
+
             
         next j
     
@@ -82,8 +100,17 @@ Public Class Test
        dim zis as button
        zis = CType(sender, _
           System.Windows.Forms.Button)
-       zis.Image  = nothing
-       zis.FlatStyle = FlatStyle.Flat
+       if zis.FlatStyle = FlatStyle.system then             
+            zis.Image = system.drawing.image.fromfile("cat.png")
+            zis.FlatStyle = FlatStyle.Standard
+       elseif  zis.FlatStyle = FlatStyle.Flat then
+            'zis.Image  = nothing       
+            zis.FlatStyle = FlatStyle.system
+       elseif  zis.Flatstyle = FlatStyle.Popup then
+            zis.Flatstyle = FlatStyle.Flat
+       else
+            zis.Flatstyle = FlatStyle.Popup
+       end if
           
     End Sub
     
