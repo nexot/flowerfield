@@ -1,7 +1,7 @@
 Flowerfield
 ===========
 
-Simple game on visual basic.net.
+Simple game on visual basic.net.  
 .net required.
 
 
