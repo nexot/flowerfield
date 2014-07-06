@@ -98,19 +98,19 @@ Public Class Test
                 mybuttarray(i,j) = new button()
                 mybuttarray(i,j).location = new System.Drawing.Point(20 + i*16, 70 + j*16)
                 mybuttarray(i,j).Name = ""                
-                mybuttarray(i,j).Tag = New Integer() {i, j, 0}
+                mybuttarray(i,j).Tag = New Integer() {i, j, 0, 0, 0} 'mine, clicked, flagged
                 mybuttarray(i,j).Size = new System.Drawing.Size(16,16)
                 
                 MyBase.Controls.Add(mybuttarray(i,j))
                 addhandler mybuttarray(i,j).MouseDown, addressof butt_clicker 
-                addhandler mybuttarray(i,j).MouseUp, addressof butt_up
-                addhandler mybuttarray(i,j).MouseEnter, addressof butt_enter
+                'addhandler mybuttarray(i,j).MouseUp, addressof butt_up
+                'addhandler mybuttarray(i,j).MouseEnter, addressof butt_enter
                 
             else
                 
                 console.write ("Dispose from button {0}, {1} ; " , i ,j)
                 MyBase.Controls.Remove(mybuttarray(i,j))
-                mybuttarray(i,j).Tag = New Integer() {i, j, -1}
+                mybuttarray(i,j).Tag = New Integer() {i, j, -1, -1 ,-1}
                 mybuttarray(i,j).Dispose()
                 console.write ("what's left is {0} ; " , mybuttarray(i,j).Tag(2))
             end if
@@ -159,52 +159,7 @@ Public Class Test
     
     end sub
 
-
-    
-    'dog mover
-    public sub dogmove
-    dim i,j,di,dj as integer
-    
-    for i = 0 to Xsize
-        for j = 0 to Ysize
-        
-           if mybuttarray(i,j).FlatStyle = FlatStyle.Popup then
-                console.write(  vbCrlf & " doggy at (" & i & "," & j & ")")
-                di = randomvalue(-1,1)                
-                if i+di>-1 and i+di<Xsize+1 then
-                    dj = randomvalue(-1,1)
-                    if j+dj>-1 and j+dj<Ysize+1 then
-                        'move the dog
-                        if mybuttarray(i+di,j+dj).FlatStyle = FlatStyle.System then
-                            mybuttarray(i,j).Image = Nothing
-                            mybuttarray(i,j).FlatStyle = FlatStyle.System          
-                            
-                            console.writeline(mybuttarray(i,j).BackColor.ToArgb())
-                            mybuttarray(i,j).BackColor = System.Drawing.Color.FromArgb(mybuttarray(i,j).BackColor.ToArgb()+100+100*256+100*256*256)
-                            
-                            mybuttarray(i+di,j+dj).FlatStyle = FlatStyle.Popup                                                        
-                            console.write(" doh jumped (" & di & ","& dj & "); now at ("& i+di &","& j+dj &")"  )
-                        end if
-                    end if
-                end if
-           end if
-                
-        next j
-    next i
-
-    for i = 0 to Xsize
-        for j = 0 to Ysize
-            if mybuttarray(i,j).FlatStyle = FlatStyle.Popup then
-                'paint the dog
-                'mybuttarray(i,j).FlatStyle = FlatStyle.Popup
-                mybuttarray(i,j).Image = system.drawing.image.fromfile("dog.png")
-            end if
-        next j
-    next i
    
-    end sub
-
-    
     
     Public Sub butt_clicker(ByVal sender As Object, ByVal e As MouseEventArgs)
          
@@ -230,11 +185,12 @@ Public Class Test
         
             zis.text = cstr(localmines)
             zis.FlatStyle = FlatStyle.Popup
+			zis.tag(3) = 1
         
             if localmines = 0 then 
                 for i = math.max(0, zis.tag(0)-1) to math.min(Xsize, zis.tag(0)+1) 
                     for j = math.max(0, zis.tag(1)-1) to math.min(Ysize, zis.tag(1)+1) 
-                        if not mybuttarray(i,j).FlatStyle = FlatStyle.Popup then
+                        if mybuttarray(i,j).tag(3)=0 then
                             console.writeline("autoclick on i = {0}, j = {1}",i,j)
                             call butt_clicker(mybuttarray(i,j), New MouseEventArgs(Windows.Forms.MouseButtons.Left, 1, 0, 0, 0))                            
                         end if
@@ -249,21 +205,6 @@ Public Class Test
 
     end sub
 
-    Public Sub butt_up(ByVal sender As Object, ByVal e As _
-        MouseEventArgs)    
-        console.writeline("butt up!")
-        mousepressed = not mousepressed
-    end sub
-
-    Public Sub butt_enter(sender As Object, e As System.EventArgs)
-        if  mousepressed then      
-           console.writeline("enter!")
-           dim zis as button
-           zis = CType(sender, System.Windows.Forms.Button)
-       end if
-       
-    End Sub
-    
     
     public sub b_click(ByVal sender as object, byval e as eventargs)
         console.writeline("b_click executed" & vbCrlf & "on object : " & sender.tostring() & vbCrlf & vbTab  & DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"))
@@ -276,7 +217,7 @@ Public Class Test
     
     public sub c_click(ByVal sender as object, byval e as eventargs)
        console.writeline("c_click executed" & vbCrlf & "on object : " & sender.tostring() & vbCrlf & vbtab  & DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"))       
-       'call dogmove
+
         call setmines
     end sub
     
