@@ -2,7 +2,9 @@ Imports System.Windows.Forms
 Imports System.Collections.CollectionBase 'used in buttonarray
 Imports System.Resources 'image load
 Imports System.Timers
-'tram
+
+
+
 
 Public Class Test
 
@@ -14,6 +16,8 @@ Public Class Test
     dim timestopped as boolean = true
     dim mousepressed as boolean = false
     dim myevent as MouseEventArgs
+       
+    dim minetotals as integer = 20   
        
     private b as New Button()
     private c as New Button()
@@ -56,7 +60,7 @@ Public Class Test
         
         MyBase.Show()                                
             
-        b.PerformClick()  
+        'b.PerformClick()  
         
             
     End sub
@@ -70,10 +74,10 @@ Public Class Test
         AddHandler aTimer.Elapsed, AddressOf OnTimedEvent
 
         ' Set the Interval to 2 seconds (2000 milliseconds).
-        aTimer.Interval = 100
+        aTimer.Interval = 1000
         
         aTimer.SynchronizingObject = me
-    
+  
     end sub
 
     
@@ -81,19 +85,20 @@ Public Class Test
     
     public sub gobuttons
     dim i,j as integer
-    
+        
     for i = 0 to Xsize
     
         for j = 0 to Ysize
-            
+
             'mybuttarray(i,j) = Nothing
             
             if cleanBurrons then 
+
                 console.write (". Nothing, i=" & CStr(i) & ";j=" & CStr(j))
                 mybuttarray(i,j) = new button()
                 mybuttarray(i,j).location = new System.Drawing.Point(20 + i*16, 70 + j*16)
-                mybuttarray(i,j).Name = ""
-                mybuttarray(i,j).Tag = i*(Ysize+1)+j
+                mybuttarray(i,j).Name = ""                
+                mybuttarray(i,j).Tag = New Integer() {i, j, 0}
                 mybuttarray(i,j).Size = new System.Drawing.Size(16,16)
                 
                 MyBase.Controls.Add(mybuttarray(i,j))
@@ -102,57 +107,55 @@ Public Class Test
                 addhandler mybuttarray(i,j).MouseEnter, addressof butt_enter
                 
             else
+                
                 console.write ("Dispose from button {0}, {1} ; " , i ,j)
-                
-                
                 MyBase.Controls.Remove(mybuttarray(i,j))
-                mybuttarray(i,j).Tag = -1
+                mybuttarray(i,j).Tag = New Integer() {i, j, -1}
                 mybuttarray(i,j).Dispose()
-                console.write ("what's left is {0} ; " , mybuttarray(i,j).Tag)
+                console.write ("what's left is {0} ; " , mybuttarray(i,j).Tag(2))
             end if
-            
-            
+              
             mybuttarray(i,j).FlatStyle = FlatStyle.System
-            
-            if (i-10)*(i-10)+(j-10)*(j-10)<57 then 
-               if (i-10)*(i-10)+(j-10)*(j-10)>23 then 
-                    mybuttarray(i,j).Image = system.drawing.image.fromfile("smile.png")
-                    
-               else
-                    mybuttarray(i,j).Image = system.drawing.image.fromfile("flower.png")
-                    mybuttarray(i,j).Flatstyle = Flatstyle.Standard
-               end if
-            else
-                    mybuttarray(i,j).Image = system.drawing.image.fromfile("dot.png")            
-                    mybuttarray(i,j).Flatstyle = Flatstyle.Standard
-            end if
-            
-
-            
+                             
         next j
     
     next i
     
     cleanBurrons = not cleanBurrons
-    
     end sub
-   
+
    
     public function randomValue(byref lowerbound as integer,byref upperbound as integer) as integer
         randomValue = CInt(Math.Floor((upperbound - lowerbound + 1) * Rnd())) + lowerbound
     end function    
+
+
     
-    public sub randbuttons
-    dim i,j as integer
+    public sub setmines
     
-    for i = 0 to Xsize
-            
+        dim i,j,mineset as integer
+        dim thisplace as integer()
+        mineset = 0
+        
+        do while mineset < minetotals
+        'for t = 1 to 10
+        
             j = randomvalue(0,Ysize)
-            
-            mybuttarray(i,j).FlatStyle = FlatStyle.Popup
-            mybuttarray(i,j).Image = system.drawing.image.fromfile("dog.png")
-    
-    next i
+            i = randomvalue(0,Xsize)
+            console.writeline("mineset {0}, minetotals {1}, i = {2}, j = {3}",mineset,minetotals, i ,j)
+            thisplace = mybuttarray(i,j).Tag
+            console.writeline("tag 0 = {0}, 1 = {1}, 2 = {2}",thisplace(0),thisplace(1),thisplace(2))
+            if thisplace(2) = 0 then
+                'set mine here             
+                thisplace(2) = 1 
+                mybuttarray(i,j).Image = system.drawing.image.fromfile("dog.png")
+                mybuttarray(i,j).Tag = thisplace
+                mineset = mineset + 1     
+                
+                console.writeline("mine {0} set at {1}, {2}",mineset,i,j)
+            end if                
+        'next t    
+        loop
     
     end sub
 
@@ -203,45 +206,47 @@ Public Class Test
 
     
     
-    Public Sub butt_clicker(ByVal sender As Object, ByVal e As _
-        MouseEventArgs)
+    Public Sub butt_clicker(ByVal sender As Object, ByVal e As MouseEventArgs)
+         
+        dim zis as button
+        zis = CType(sender, System.Windows.Forms.Button)
+          
+        zis.Capture = false
         
-       'System.EventArgs)
-       'MessageBox.Show("you have clicked button " & CType(CType(sender, _
-        Console.Writeline("you have clicked button " & CType(CType(sender, _
-          System.Windows.Forms.Button).Tag, String))
-       dim zis as button
-       zis = CType(sender, _
-          System.Windows.Forms.Button)
-          
-       zis.Capture = false
-       
-        If (e.Button = Windows.Forms.MouseButtons.Right) Then
-           zis.FlatStyle = FlatStyle.Popup
-           zis.Image = system.drawing.image.fromfile("dog.png")        
-        elseif (e.Button = Windows.Forms.MouseButtons.Left) Then
-           zis.FlatStyle = FlatStyle.Standard
-           zis.Image = system.drawing.image.fromfile("flower.png")       
+        console.writeline("clicked button i = {0}, j = {1}, mineflag = {2}",zis.Tag(0), zis.Tag(1),zis.Tag(2))
+        
+        if zis.tag(2) = 1 then 
+            console.writeline ("BANG BANG !")
+            zis.FlatStyle = FlatStyle.Popup
         else
-           zis.FlatStyle = FlatStyle.System
-           zis.Image = Nothing
-        End If       
-    console.writeline("mouse down!")   
+            
+            dim i,j,localmines as integer
+            localmines = 0
+            for i = math.max(0, zis.tag(0)-1) to math.min(Xsize, zis.tag(0)+1) 
+                for j = math.max(0, zis.tag(1)-1) to math.min(Ysize, zis.tag(1)+1) 
+                    if mybuttarray(i,j).tag(2) = 1 then localmines += 1
+                next j
+            next i
+        
+            zis.text = cstr(localmines)
+            zis.FlatStyle = FlatStyle.Popup
+        
+            if localmines = 0 then 
+                for i = math.max(0, zis.tag(0)-1) to math.min(Xsize, zis.tag(0)+1) 
+                    for j = math.max(0, zis.tag(1)-1) to math.min(Ysize, zis.tag(1)+1) 
+                        if not mybuttarray(i,j).FlatStyle = FlatStyle.Popup then
+                            console.writeline("autoclick on i = {0}, j = {1}",i,j)
+                            call butt_clicker(mybuttarray(i,j), New MouseEventArgs(Windows.Forms.MouseButtons.Left, 1, 0, 0, 0))                            
+                        end if
+                    next j
+                next i
+            end if
+        
+        end if
+       
+        console.writeline("mouse down!")   
     
-          
-#If False Then
-       if zis.FlatStyle = FlatStyle.system then             
-            zis.Image = system.drawing.image.fromfile("cat.png")
-            zis.FlatStyle = FlatStyle.Standard
-       elseif  zis.FlatStyle = FlatStyle.Flat then
-            'zis.Image  = nothing       
-            zis.FlatStyle = FlatStyle.system
-       elseif  zis.Flatstyle = FlatStyle.Popup then
-            zis.Flatstyle = FlatStyle.Flat
-       else
-            zis.Flatstyle = FlatStyle.Popup
-       end if
-#End If          
+
     end sub
 
     Public Sub butt_up(ByVal sender As Object, ByVal e As _
@@ -266,13 +271,13 @@ Public Class Test
        if not timestopped then d.PerformClick()
        
        call gobuttons
-       call randbuttons
        call settimer
     end sub
     
     public sub c_click(ByVal sender as object, byval e as eventargs)
        console.writeline("c_click executed" & vbCrlf & "on object : " & sender.tostring() & vbCrlf & vbtab  & DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss"))       
-       call dogmove
+       'call dogmove
+        call setmines
     end sub
     
     public sub d_click(ByVal sender as object, byval e as eventargs)
@@ -287,7 +292,7 @@ Public Class Test
     
     public Sub OnTimedEvent(source As Object, e As ElapsedEventArgs)
         Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime)
-        call dogmove
+        'call dogmove
     End Sub 
     
    
