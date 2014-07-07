@@ -12,6 +12,9 @@ Public Class Test
     
     dim Xsize as integer = 20
     dim Ysize as integer = 20
+    
+    dim fsize as integer = (Xsize+1)*(Ysize+1) 'field size
+    
     dim cleanBurrons as Boolean = True   
     dim timestopped as boolean = true
     dim mousepressed as boolean = false
@@ -89,10 +92,8 @@ Public Class Test
     for i = 0 to Xsize
     
         for j = 0 to Ysize
-
-            'mybuttarray(i,j) = Nothing
-            
-            if cleanBurrons then 
+ 
+            if cleanBurrons then ' when new buttons needed
 
                 console.write (". Nothing, i=" & CStr(i) & ";j=" & CStr(j))
                 mybuttarray(i,j) = new button()
@@ -100,13 +101,14 @@ Public Class Test
                 mybuttarray(i,j).Name = ""                
                 mybuttarray(i,j).Tag = New Integer() {i, j, 0, 0, 0} 'mine, clicked, flagged
                 mybuttarray(i,j).Size = new System.Drawing.Size(16,16)
-                
+                mybuttarray(i,j).Capture = false
+                mybuttarray(i,j).FlatStyle = FlatStyle.Standard
                 MyBase.Controls.Add(mybuttarray(i,j))
                 addhandler mybuttarray(i,j).MouseDown, addressof butt_clicker 
-                'addhandler mybuttarray(i,j).MouseUp, addressof butt_up
-                'addhandler mybuttarray(i,j).MouseEnter, addressof butt_enter
                 
-            else
+                
+                
+            else  ' clear buttons here
                 
                 console.write ("Dispose from button {0}, {1} ; " , i ,j)
                 MyBase.Controls.Remove(mybuttarray(i,j))
@@ -115,13 +117,14 @@ Public Class Test
                 console.write ("what's left is {0} ; " , mybuttarray(i,j).Tag(2))
             end if
               
-            mybuttarray(i,j).FlatStyle = FlatStyle.System
+            
                              
         next j
     
     next i
     
-    cleanBurrons = not cleanBurrons
+    cleanBurrons = not cleanBurrons 'flip state
+    
     end sub
 
    
@@ -148,7 +151,7 @@ Public Class Test
             if thisplace(2) = 0 then
                 'set mine here             
                 thisplace(2) = 1 
-                mybuttarray(i,j).Image = system.drawing.image.fromfile("dog.png")
+                
                 mybuttarray(i,j).Tag = thisplace
                 mineset = mineset + 1     
                 
@@ -166,42 +169,104 @@ Public Class Test
         dim zis as button
         zis = CType(sender, System.Windows.Forms.Button)
           
-        zis.Capture = false
+        
         
         console.writeline("clicked button i = {0}, j = {1}, mineflag = {2}",zis.Tag(0), zis.Tag(1),zis.Tag(2))
         
-        if zis.tag(2) = 1 then 
-            console.writeline ("BANG BANG !")
-            zis.FlatStyle = FlatStyle.Popup
-        else
-            
-            dim i,j,localmines as integer
-            localmines = 0
-            for i = math.max(0, zis.tag(0)-1) to math.min(Xsize, zis.tag(0)+1) 
-                for j = math.max(0, zis.tag(1)-1) to math.min(Ysize, zis.tag(1)+1) 
-                    if mybuttarray(i,j).tag(2) = 1 then localmines += 1
-                next j
-            next i
+        console.writeline("button = {0}", e.Button)
         
-            zis.text = cstr(localmines)
-            zis.FlatStyle = FlatStyle.Popup
-			zis.tag(3) = 1
-        
-            if localmines = 0 then 
+        select case e.Button 
+            case MouseButtons.Right
+                if zis.tag(3) = 1 then exit select ' do nothing on open field
+                
+                console.writeline("do = {0}", "Flag")
+                
+                if zis.tag(4) = 2 then zis.tag(4) = 0 else zis.tag(4) += 1 
+                ' circle states (0=empty)->(1=flag)->(2=question mark)
+                
+                console.writeline("set flag to {0}", zis.tag(4))
+                
+                select case cint(zis.tag(4))
+                    case 0
+                        zis.Image = Nothing
+                    case 1
+                        zis.Image = system.drawing.image.fromfile("smile.png")
+                    case 2
+                        zis.Image = system.drawing.image.fromfile("cat.png")
+                        
+                end select
+                
+            case MouseButtons.Left
+                if not zis.tag(4) = 0 then exit select ' do nothing on flagged field
+                
+                console.writeline("do = {0}", "Check")
+         
+                if zis.tag(2) = 1 then 
+                    console.writeline ("BANG BANG !")
+                    'zis.tag(3) = 1
+                    zis.FlatStyle = FlatStyle.Popup
+                    zis.Image = system.drawing.image.fromfile("dog.png")
+                else
+                    
+                    dim i,j,localmines as integer
+                    localmines = 0
+                    for i = math.max(0, zis.tag(0)-1) to math.min(Xsize, zis.tag(0)+1) 
+                        for j = math.max(0, zis.tag(1)-1) to math.min(Ysize, zis.tag(1)+1) 
+                            if mybuttarray(i,j).tag(2) = 1 then localmines += 1
+                        next j
+                    next i
+                
+                    zis.text = cstr(localmines)
+                    zis.FlatStyle = FlatStyle.Popup
+                    zis.tag(3) = 1
+                
+                    if localmines = 0 then 
+                        for i = math.max(0, zis.tag(0)-1) to math.min(Xsize, zis.tag(0)+1) 
+                            for j = math.max(0, zis.tag(1)-1) to math.min(Ysize, zis.tag(1)+1) 
+                                if mybuttarray(i,j).tag(3)=0 then
+                                    console.writeline("autoclick on i = {0}, j = {1}",i,j)
+                                    call butt_clicker(mybuttarray(i,j), New MouseEventArgs(Windows.Forms.MouseButtons.Left, 1, 0, 0, 0))                            
+                                end if
+                            next j
+                        next i
+                    end if
+                
+                end if               
+                
+                'check game end = open all minesfree place
+                
+                dim s,r as integer
+                dim chks as integer = fsize
+                dim bangs as integer = 0
+                for s = 0 to Xsize
+                    for r = 0 to Ysize
+                    
+                        chks -= mybuttarray(s,r).tag(2) + mybuttarray(s,r).tag(3) 'open or mined
+                        bangs += mybuttarray(s,r).tag(2) * mybuttarray(s,r).tag(3) ' open and mined
+                        
+                    next r
+                next s
+                
+                console.writeline("left to free = {0}, banged = {1}", chks, bangs)
+                
+                if chks=0 then console.writeline("Victory! Life spent = {0}", bangs)
+                
+            case MouseButtons.Middle
+                console.writeline("do = {0}", "Auto")
+                
+                dim i,j as integer
                 for i = math.max(0, zis.tag(0)-1) to math.min(Xsize, zis.tag(0)+1) 
                     for j = math.max(0, zis.tag(1)-1) to math.min(Ysize, zis.tag(1)+1) 
-                        if mybuttarray(i,j).tag(3)=0 then
+                        if mybuttarray(i,j).tag(3)=0 and mybuttarray(i,j).tag(4)=0 then
                             console.writeline("autoclick on i = {0}, j = {1}",i,j)
                             call butt_clicker(mybuttarray(i,j), New MouseEventArgs(Windows.Forms.MouseButtons.Left, 1, 0, 0, 0))                            
                         end if
                     next j
                 next i
-            end if
-        
-        end if
-       
-        console.writeline("mouse down!")   
-    
+                
+                
+                
+        end select
 
     end sub
 
