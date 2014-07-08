@@ -26,7 +26,12 @@ Public Class Test
     private c as New Button()
     private d as New Button()
     
+    Dim Label1 as New Label()
+    Dim Label2 as New Label()
+    
     Private Shared aTimer As System.Timers.Timer
+    Private _elapseStartTime As DateTime
+    Dim elapsedtime as System.TimeSpan
     
     'Dim MyControlArray as ButtonArray
     
@@ -34,9 +39,10 @@ Public Class Test
      
     
     Public Sub New()
+    
         MyBase.New()
         MyBase.Topmost = True
-        MyBase.Text = "Это Заголовок формы"
+        MyBase.Text = "Это Заголовок формы: Игра в сапера на минном поле"
         MyBase.Size = new System.Drawing.Size(520,520)
         
        ' MyControlArray = New ButtonArray(Me)
@@ -44,22 +50,43 @@ Public Class Test
        ' MyControlArray(0).BackColor = System.Drawing.Color.Red
         
         b.Dock = DockStyle.Top
-        b.Text = "Это Кнопка b"
+        b.Text = "Это Кнопка b: Создать пустое поле/Удалить поле"
         addhandler b.Click, addressof b_click    
 
         c.Dock = DockStyle.Top
-        c.Text = "Это Кнопка c"
+        c.Text = "Это Кнопка c: Добавить немного мин"
         addhandler c.Click, addressof c_click         
 
         d.Dock = DockStyle.Top
-        d.Text = "Это Кнопка d"
+        d.Text = "Это Кнопка d: Остановить/Запустить таймер"
         addhandler d.Click, addressof d_click      
-        
-        
+                
+
+        Label1.BackColor = System.Drawing.Color.LightGray
+        Label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        'Label1.Width = 60
+        Label1.Text = "Это метка Label1: Таймер"
+        'Label1.location = new System.Drawing.Point(20, 77)
+        Label1.Dock = DockStyle.Top
+    
+    
+        Label2.BackColor = System.Drawing.Color.DarkGray
+        Label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        Label2.Text = "Это метка Label2: Статус игры"
+        Label2.Dock = DockStyle.Top    
+    
+    
+        MyBase.Controls.Add(Label2)
+        MyBase.Controls.Add(Label1)
+ 
+ 
         MyBase.Controls.Add(d)
         MyBase.Controls.Add(c)
         MyBase.Controls.Add(b)
-        
+
+ 
+        call settimer
+        call gobuttons
         
         MyBase.Show()                                
             
@@ -80,6 +107,8 @@ Public Class Test
         aTimer.Interval = 1000
         
         aTimer.SynchronizingObject = me
+        
+        _elapseStartTime = DateTime.Now
   
     end sub
 
@@ -97,7 +126,7 @@ Public Class Test
 
                 console.write (". Nothing, i=" & CStr(i) & ";j=" & CStr(j))
                 mybuttarray(i,j) = new button()
-                mybuttarray(i,j).location = new System.Drawing.Point(20 + i*16, 70 + j*16)
+                mybuttarray(i,j).location = new System.Drawing.Point(20 + i*16, 130 + j*16)
                 mybuttarray(i,j).Name = ""                
                 mybuttarray(i,j).Tag = New Integer() {i, j, 0, 0, 0} 'mine, clicked, flagged
                 mybuttarray(i,j).Size = new System.Drawing.Size(16,16)
@@ -106,8 +135,7 @@ Public Class Test
                 MyBase.Controls.Add(mybuttarray(i,j))
                 addhandler mybuttarray(i,j).MouseDown, addressof butt_clicker 
                 
-                
-                
+          
             else  ' clear buttons here
                 
                 console.write ("Dispose from button {0}, {1} ; " , i ,j)
@@ -115,6 +143,7 @@ Public Class Test
                 mybuttarray(i,j).Tag = New Integer() {i, j, -1, -1 ,-1}
                 mybuttarray(i,j).Dispose()
                 console.write ("what's left is {0} ; " , mybuttarray(i,j).Tag(2))
+                
             end if
               
             
@@ -165,7 +194,13 @@ Public Class Test
    
     
     Public Sub butt_clicker(ByVal sender As Object, ByVal e As MouseEventArgs)
-         
+        
+        if timestopped then 
+            timestopped = false
+            aTimer.Enabled = True
+        end if
+
+        
         dim zis as button
         zis = CType(sender, System.Windows.Forms.Button)
           
@@ -198,12 +233,13 @@ Public Class Test
                 
             case MouseButtons.Left
                 if not zis.tag(4) = 0 then exit select ' do nothing on flagged field
+                if not zis.tag(3) = 0 then exit select ' do nothing on open field
                 
                 console.writeline("do = {0}", "Check")
          
                 if zis.tag(2) = 1 then 
                     console.writeline ("BANG BANG !")
-                    'zis.tag(3) = 1
+                    zis.tag(3) = 1
                     zis.FlatStyle = FlatStyle.Popup
                     zis.Image = system.drawing.image.fromfile("dog.png")
                 else
@@ -240,16 +276,31 @@ Public Class Test
                 dim bangs as integer = 0
                 for s = 0 to Xsize
                     for r = 0 to Ysize
-                    
-                        chks -= mybuttarray(s,r).tag(2) + mybuttarray(s,r).tag(3) 'open or mined
+                        
+                        chks -= mybuttarray(s,r).tag(2) + mybuttarray(s,r).tag(3) - mybuttarray(s,r).tag(2) * mybuttarray(s,r).tag(3) 'open or mined
                         bangs += mybuttarray(s,r).tag(2) * mybuttarray(s,r).tag(3) ' open and mined
                         
                     next r
                 next s
                 
                 console.writeline("left to free = {0}, banged = {1}", chks, bangs)
+                Label1.Text= String.Format("Left to disarm = {0}, life spent = {1}", chks, bangs)
                 
-                if chks=0 then console.writeline("Victory! Life spent = {0}", bangs)
+                if chks=0 then 
+                    console.writeline("Victory! Life spent = {0}", bangs)
+                    elapsedtime = DateTime.Now.Subtract(_elapseStartTime)
+                    console.writeline(String.Format("{0}hr : {1}min : {2}sec", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds))
+                    
+
+                    Label1.Text= String.Format("Victory!, life spent = {0}",  bangs)
+                    Label2.Text= String.Format("{0} hr : {1} min : {2} sec : {3} ms", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds, elapsedtime.Milliseconds)
+                    
+                    
+                    timestopped = true
+                    aTimer.Enabled = false
+
+                    
+                end if
                 
             case MouseButtons.Middle
                 console.writeline("do = {0}", "Auto")
@@ -268,6 +319,8 @@ Public Class Test
                 
         end select
 
+        
+
     end sub
 
     
@@ -277,6 +330,7 @@ Public Class Test
        if not timestopped then d.PerformClick()
        
        call gobuttons
+
        call settimer
     end sub
     
@@ -298,6 +352,9 @@ Public Class Test
     
     public Sub OnTimedEvent(source As Object, e As ElapsedEventArgs)
         Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime)
+        elapsedtime = DateTime.Now.Subtract(_elapseStartTime)
+        Label2.Text= String.Format("{0} hr : {1} min : {2} sec : {3} ms", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds, elapsedtime.Milliseconds)
+        
         'call dogmove
     End Sub 
     
