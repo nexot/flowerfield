@@ -216,8 +216,8 @@ Public Class Test
                 
                 console.writeline("do = {0}", "Flag")
                 
-                if zis.tag(4) = 2 then zis.tag(4) = 0 else zis.tag(4) += 1 
-                ' circle states (0=empty)->(1=flag)->(2=question mark)
+                if zis.tag(4) = 1 then zis.tag(4) = 0 else zis.tag(4) += 1 
+                ' circle states (0=empty)->(1=flag)->(0=empty)
                 
                 console.writeline("set flag to {0}", zis.tag(4))
                 
@@ -274,9 +274,11 @@ Public Class Test
                 dim s,r as integer
                 dim chks as integer = fsize
                 dim bangs as integer = 0
+                dim totmines as integer = 0
                 for s = 0 to Xsize
                     for r = 0 to Ysize
-                        
+                    
+                        totmines += mybuttarray(s,r).tag(2)
                         chks -= mybuttarray(s,r).tag(2) + mybuttarray(s,r).tag(3) - mybuttarray(s,r).tag(2) * mybuttarray(s,r).tag(3) 'open or mined
                         bangs += mybuttarray(s,r).tag(2) * mybuttarray(s,r).tag(3) ' open and mined
                         
@@ -292,13 +294,24 @@ Public Class Test
                     console.writeline(String.Format("{0}hr : {1}min : {2}sec", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds))
                     
 
-                    Label1.Text= String.Format("Victory!, life spent = {0}",  bangs)
-                    Label2.Text= String.Format("{0} hr : {1} min : {2} sec : {3} ms", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds, elapsedtime.Milliseconds)
-                    
+                    Label1.Text= String.Format("Игра окончена. Мин взорвалось = {0}. Мин разминировано = {1}",  bangs, totmines - bangs)
+                    Label2.Text= String.Format("Общее время : {0} ч : {1} м : {2} с : {3} мс", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds, elapsedtime.Milliseconds)
+                                        
                     
                     timestopped = true
                     aTimer.Enabled = false
 
+                    for s = 0 to Xsize
+                        for r = 0 to Ysize
+                    
+                            if mybuttarray(s,r).tag(2)=1 and mybuttarray(s,r).tag(3)=0 then
+                                mybuttarray(s,r).tag(4)=1
+                                mybuttarray(s,r).Image = system.drawing.image.fromfile("smile.png")
+                            end if
+                            
+                            removehandler mybuttarray(s,r).MouseDown, addressof butt_clicker 
+                        next r
+                    next s
                     
                 end if
                 
@@ -353,7 +366,7 @@ Public Class Test
     public Sub OnTimedEvent(source As Object, e As ElapsedEventArgs)
         Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime)
         elapsedtime = DateTime.Now.Subtract(_elapseStartTime)
-        Label2.Text= String.Format("{0} hr : {1} min : {2} sec : {3} ms", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds, elapsedtime.Milliseconds)
+        Label2.Text= String.Format("Время потрачено : {0} hr : {1} min : {2} sec ", elapsedtime.Hours, elapsedtime.Minutes, elapsedtime.Seconds)
         
         'call dogmove
     End Sub 
