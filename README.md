@@ -2,25 +2,25 @@ Flowerfield
 ===========
 Simple playground on visual basic.
 
+
 Flowerfield.vb
-==============
+---------------
 Playground for tests
 
 
 Miner.vb
-==============
+----------------
 Simple minesweeper
 
 
 
 Requirements
-===========
+-----------------
 .net v.2 at least
 
 
 Compile and run
-===========
-
+-----------------
 Compile
     
     %windir%\Microsoft.NET\Framework\v2.0.50727\vbc.exe flowerfield.vb
@@ -29,7 +29,7 @@ Then run flowerfield.exe
 
 
 Other
-===========
+----------------
     
 npp (/w nppexec) script
     
