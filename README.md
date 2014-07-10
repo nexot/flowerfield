@@ -1,6 +1,6 @@
 Flowerfield
 ===========
-Simple playground on visual basic.
+Playground for visual basic.
 
 
 Flowerfield.vb
