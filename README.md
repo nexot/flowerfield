@@ -1,7 +1,16 @@
 Flowerfield
 ===========
+Simple playground on visual basic.
 
-Simple game written with visual basic
+Flowerfield.vb
+==============
+Playground for tests
+
+
+Miner.vb
+==============
+Simple minesweeper
+
 
 
 Requirements
